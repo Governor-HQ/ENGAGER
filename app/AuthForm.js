@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useActionState } from 'react';
+import { HELP_URL } from '@/lib/help';
 import { login, signup } from './auth-actions';
 
 export default function AuthForm({ mode }) {
@@ -49,6 +50,11 @@ export default function AuthForm({ mode }) {
           ) : (
             <>New here? <Link href="/signup">Create an account</Link></>
           )}
+        </p>
+        <p className="muted small center">
+          <a href={HELP_URL} target="_blank" rel="noopener noreferrer" className="help-link">
+            Need help?
+          </a>
         </p>
       </div>
     </main>
