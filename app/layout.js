@@ -1,3 +1,4 @@
+import { connection } from 'next/server';
 import './globals.css';
 
 const description =
@@ -30,7 +31,10 @@ export const viewport = {
   themeColor: '#B5272C',
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  // Render every page per request so Next.js can add the CSP nonce to its scripts.
+  await connection();
+
   return (
     <html lang="en">
       <body>
