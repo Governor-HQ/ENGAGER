@@ -39,6 +39,33 @@ function groupByDate(posts) {
   return groups;
 }
 
+function PostCard({ post, engaged }) {
+  return (
+    <li className="card">
+      <span className="card-name">{post.profiles?.full_name || 'Classmate'}</span>
+      <div className="card-actions">
+        <a href={post.url} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
+          Open on LinkedIn ↗
+        </a>
+        <EngageButton postId={post.id} engaged={engaged} />
+      </div>
+    </li>
+  );
+}
+
+function DateGroups({ posts, today, engaged }) {
+  return groupByDate(posts).map((group) => (
+    <div key={group.date} className="date-group">
+      <h4 className="date-heading">{dateHeading(group.date, today)}</h4>
+      <ul className="feed">
+        {group.posts.map((post) => (
+          <PostCard key={post.id} post={post} engaged={engaged} />
+        ))}
+      </ul>
+    </div>
+  ));
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
@@ -80,8 +107,10 @@ export default async function DashboardPage() {
   const fullName = profile.data?.full_name || user.email;
   const posts = feed.data || [];
   const engagedIds = new Set((myEngagements.data || []).map((e) => e.post_id));
-  const remaining = posts.filter((p) => !engagedIds.has(p.id)).length;
-  const groups = groupByDate(posts);
+  const waiting = posts.filter((p) => !engagedIds.has(p.id));
+  const done = posts.filter((p) => engagedIds.has(p.id));
+  const progress = posts.length > 0 ? Math.round((done.length / posts.length) * 100) : 0;
+  const isNewUser = (postCount.count ?? 0) === 0 && (givenCount.count ?? 0) === 0;
 
   return (
     <>
@@ -116,6 +145,17 @@ export default async function DashboardPage() {
           </div>
         </section>
 
+        {isNewUser && (
+          <section className="how-it-works" aria-labelledby="how-it-works-title">
+            <h2 id="how-it-works-title">How it works</h2>
+            <ol>
+              <li>Post on LinkedIn, then paste your link here. One post per day.</li>
+              <li>Open your classmates&apos; posts and like or comment on them.</li>
+              <li>Come back and tap &quot;Mark as engaged&quot; so it counts.</li>
+            </ol>
+          </section>
+        )}
+
         <section className="panel">
           <h2>Today&apos;s post</h2>
           {myPost.data ? (
@@ -143,39 +183,46 @@ export default async function DashboardPage() {
         <section>
           <div className="feed-header">
             <h2>Classmates&apos; posts</h2>
-            {posts.length > 0 && (
-              <span className="muted small">
-                {remaining === 0 ? 'All caught up 🎉' : `${remaining} left to engage`}
-              </span>
-            )}
           </div>
 
           {posts.length === 0 ? (
             <p className="empty">No posts from classmates yet. Check back later.</p>
           ) : (
-            groups.map((group) => (
-              <div key={group.date} className="date-group">
-                <h3 className="date-heading">{dateHeading(group.date, today)}</h3>
-                <ul className="feed">
-                  {group.posts.map((post) => (
-                    <li key={post.id} className="card">
-                      <span className="card-name">{post.profiles?.full_name || 'Classmate'}</span>
-                      <div className="card-actions">
-                        <a
-                          href={post.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-outline"
-                        >
-                          Open on LinkedIn ↗
-                        </a>
-                        <EngageButton postId={post.id} engaged={engagedIds.has(post.id)} />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+            <>
+              <div className="progress-block">
+                <p className="muted small" id="engage-progress-label">
+                  You&apos;ve engaged with {done.length} of {posts.length} classmates&apos; posts
+                </p>
+                <div
+                  className="progress-track"
+                  role="progressbar"
+                  aria-labelledby="engage-progress-label"
+                  aria-valuemin={0}
+                  aria-valuemax={posts.length}
+                  aria-valuenow={done.length}
+                >
+                  <div className="progress-fill" style={{ width: `${progress}%` }} />
+                </div>
               </div>
-            ))
+
+              <div>
+                <h3 className="section-title">Waiting for you ({waiting.length})</h3>
+                {waiting.length === 0 ? (
+                  <p className="caught-up">All caught up. Nice work.</p>
+                ) : (
+                  <DateGroups posts={waiting} today={today} engaged={false} />
+                )}
+              </div>
+
+              {done.length > 0 && (
+                <details className="engaged-details">
+                  <summary>Already engaged ({done.length})</summary>
+                  <div className="engaged-body">
+                    <DateGroups posts={done} today={today} engaged />
+                  </div>
+                </details>
+              )}
+            </>
           )}
         </section>
       </main>
