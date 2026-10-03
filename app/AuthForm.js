@@ -19,7 +19,7 @@ export default function AuthForm({ mode }) {
           {isSignup && (
             <label className="field">
               <span>Full name</span>
-              <input name="full_name" type="text" autoComplete="name" maxLength={100} required />
+              <input name="full_name" type="text" autoComplete="name" maxLength={80} required />
             </label>
           )}
           <label className="field">
@@ -32,7 +32,7 @@ export default function AuthForm({ mode }) {
               name="password"
               type="password"
               autoComplete={isSignup ? 'new-password' : 'current-password'}
-              minLength={6}
+              minLength={isSignup ? 8 : undefined}
               required
             />
           </label>

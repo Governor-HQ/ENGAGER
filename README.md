@@ -2,6 +2,8 @@
 
 A small web app that helps a class coordinate LinkedIn engagement. Each student submits one LinkedIn post per day. They see their classmates' posts for the day and mark each one as engaged once they've liked or commented on it.
 
+**Built by [Governor](https://github.com/Governor-HQ), Emmanuel Chiemerie Okennwa**
+
 Built with Next.js 16 (App Router), Supabase (Postgres + Auth) and plain CSS.
 
 ## 1. Set up Supabase

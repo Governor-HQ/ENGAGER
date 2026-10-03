@@ -3,14 +3,48 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 
+const GENERIC_ERROR = 'Something went wrong, try again.';
+
+// Map Supabase Auth error codes to friendly text so raw errors never reach the client.
+function signupErrorMessage(error) {
+  switch (error.code) {
+    case 'user_already_exists':
+    case 'email_exists':
+      return 'An account with this email already exists. Log in instead.';
+    case 'weak_password':
+      return 'Password must be at least 8 characters long.';
+    case 'email_address_invalid':
+    case 'validation_failed':
+      return 'Please enter a valid email address.';
+    case 'over_request_rate_limit':
+    case 'over_email_send_rate_limit':
+      return 'Too many attempts. Please wait a minute and try again.';
+    default:
+      console.error('signup failed:', error);
+      return GENERIC_ERROR;
+  }
+}
+
+function loginErrorMessage(error) {
+  switch (error.code) {
+    case 'invalid_credentials':
+      return 'Incorrect email or password.';
+    case 'email_not_confirmed':
+      return 'Your email isn\'t confirmed yet. Contact Governor via "Need help?".';
+    default:
+      console.error('login failed:', error);
+      return GENERIC_ERROR;
+  }
+}
+
 export async function signup(_prevState, formData) {
   const fullName = String(formData.get('full_name') || '').trim();
   const email = String(formData.get('email') || '').trim();
   const password = String(formData.get('password') || '');
 
   if (!fullName) return { error: 'Please enter your full name.' };
-  if (fullName.length > 100) return { error: 'Name must be 100 characters or fewer.' };
-  if (password.length < 6) return { error: 'Password must be at least 6 characters.' };
+  if (fullName.length > 80) return { error: 'Name must be 80 characters or fewer.' };
+  if (password.length < 8) return { error: 'Password must be at least 8 characters long.' };
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -20,7 +54,7 @@ export async function signup(_prevState, formData) {
     options: { data: { full_name: fullName } },
   });
 
-  if (error) return { error: error.message };
+  if (error) return { error: signupErrorMessage(error) };
   if (!data.session) {
     return {
       error:
@@ -38,7 +72,7 @@ export async function login(_prevState, formData) {
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-  if (error) return { error: error.message };
+  if (error) return { error: loginErrorMessage(error) };
 
   redirect('/dashboard');
 }
