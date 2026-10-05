@@ -1,5 +1,21 @@
+import { Bricolage_Grotesque, DM_Sans } from 'next/font/google';
 import { connection } from 'next/server';
 import './globals.css';
+
+// Downloaded at build time and served from this site, so the CSP font-src 'self' holds.
+const display = Bricolage_Grotesque({
+  subsets: ['latin'],
+  weight: ['600', '800'],
+  display: 'swap',
+  variable: '--font-bricolage',
+});
+
+const body = DM_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  display: 'swap',
+  variable: '--font-dm-sans',
+});
 
 const description =
   'One LinkedIn post a day. Everyone engages with everyone. Built for the Tech4Youth cohort.';
@@ -36,7 +52,7 @@ export default async function RootLayout({ children }) {
   await connection();
 
   return (
-    <html lang="en">
+    <html lang="en" className={`${display.variable} ${body.variable}`}>
       <body>
         {children}
         <footer className="site-footer">© 2026 GovernorHQ</footer>

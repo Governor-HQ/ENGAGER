@@ -1,0 +1,86 @@
+/* Login and signup screen: brand panel on the left, form on the right. */
+
+.login {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  background: var(--bg);
+  min-width: 0;
+}
+
+.art {
+  background: var(--red);
+  color: var(--on-red);
+  padding: 48px 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 40px;
+  min-width: 0;
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-size: clamp(2.6rem, 8vw, 4.4rem);
+  line-height: 0.95;
+  margin: 0;
+  color: inherit;
+}
+
+.tagline {
+  font-size: 1.15rem;
+  max-width: 26ch;
+  margin: 14px 0 0;
+  opacity: 0.95;
+  overflow-wrap: break-word;
+}
+
+.rhythm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.rhythm span {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 99px;
+  padding: 6px 14px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.form {
+  padding: 48px 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  max-width: 460px;
+  width: 100%;
+  min-width: 0;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 760px) {
+  .login {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+  }
+
+  .art {
+    padding: 32px 20px;
+    gap: 24px;
+  }
+
+  .form {
+    padding: 32px 20px;
+  }
+}
