@@ -14,9 +14,12 @@ export default function EngageButton({ postId, engaged }) {
   if (engaged) {
     return (
       <div className={styles.engage}>
-        <button type="button" className="btn btn-done" disabled>
-          Engaged ✓
-        </button>
+        <span className={styles.engagedState}>
+          <span className={styles.engagedTick} aria-hidden="true">
+            ✓
+          </span>
+          Engaged
+        </span>
         {error}
       </div>
     );
