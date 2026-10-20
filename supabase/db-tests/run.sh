@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # run.sh: runs the classrooms/groups database tests on a throwaway local PostgreSQL 17 cluster.
 #
-# Usage: bash supabase/db-tests/run.sh [path-to-forward-migration]
+# Usage: bash supabase/db-tests/run.sh [path-to-forward-migration] [path-to-admin-views-migration]
 #   The optional argument replaces the real forward migration (for example a deliberately broken copy).
 #
 # Never connects to a remote database: the cluster is created with initdb in a mktemp -d folder,
@@ -11,6 +11,7 @@
 # Run 1 (db engager_test):     stub.sql, ../schema.sql, seed_legacy.sql, <migration>, groups.test.sql
 # Run 2 (db engager_rollback): stub.sql, ../schema.sql, seed_legacy.sql, <migration>, <rollback>, rollback.test.sql
 # Run 3 (db engager_propagation): stub.sql, ../schema.sql, <migration>, propagation.test.sql
+# Run 4 (db engager_admin_views): stub.sql, ../schema.sql, <migration>, <admin views migration>, admin_views.test.sql
 # Exit code is non-zero if any test failed or any SQL errored.
 
 set -u
@@ -21,6 +22,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SUPA_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 MIGRATION="${1:-$SUPA_DIR/migrations/20261009120000_classrooms_groups.sql}"
 ROLLBACK="$SUPA_DIR/rollbacks/20261009120000_classrooms_groups_rollback.sql"
+ADMIN_VIEWS="${2:-$SUPA_DIR/migrations/20261020120000_admin_views.sql}"
 
 die() { echo "FATAL: $*" >&2; exit 2; }
 
@@ -141,10 +143,14 @@ run_suite engager_propagation "$SCRIPT_DIR/propagation.test.sql" \
   "$SCRIPT_DIR/stub.sql" "$SUPA_DIR/schema.sql" "$MIGRATION" \
   || TOTAL_FAILED_RUNS=$((TOTAL_FAILED_RUNS + 1))
 
+run_suite engager_admin_views "$SCRIPT_DIR/admin_views.test.sql" \
+  "$SCRIPT_DIR/stub.sql" "$SUPA_DIR/schema.sql" "$MIGRATION" "$ADMIN_VIEWS" \
+  || TOTAL_FAILED_RUNS=$((TOTAL_FAILED_RUNS + 1))
+
 echo
 if [ "$TOTAL_FAILED_RUNS" -ne 0 ]; then
-  echo "RESULT: FAIL ($TOTAL_FAILED_RUNS of 3 runs failed)"
+  echo "RESULT: FAIL ($TOTAL_FAILED_RUNS of 4 runs failed)"
   exit 1
 fi
-echo "RESULT: PASS (all 3 runs)"
+echo "RESULT: PASS (all 4 runs)"
 exit 0
