@@ -12,6 +12,7 @@
 # Run 2 (db engager_rollback): stub.sql, ../schema.sql, seed_legacy.sql, <migration>, <rollback>, rollback.test.sql
 # Run 3 (db engager_propagation): stub.sql, ../schema.sql, <migration>, propagation.test.sql
 # Run 4 (db engager_admin_views): stub.sql, ../schema.sql, <migration>, <admin views migration>, admin_views.test.sql
+# Run 5 (db engager_release_gap): stub.sql, ../schema.sql, seed_legacy.sql, <migration>, release_gap.test.sql
 # Exit code is non-zero if any test failed or any SQL errored.
 
 set -u
@@ -147,10 +148,14 @@ run_suite engager_admin_views "$SCRIPT_DIR/admin_views.test.sql" \
   "$SCRIPT_DIR/stub.sql" "$SUPA_DIR/schema.sql" "$MIGRATION" "$ADMIN_VIEWS" \
   || TOTAL_FAILED_RUNS=$((TOTAL_FAILED_RUNS + 1))
 
+run_suite engager_release_gap "$SCRIPT_DIR/release_gap.test.sql" \
+  "$SCRIPT_DIR/stub.sql" "$SUPA_DIR/schema.sql" "$SCRIPT_DIR/seed_legacy.sql" "$MIGRATION" \
+  || TOTAL_FAILED_RUNS=$((TOTAL_FAILED_RUNS + 1))
+
 echo
 if [ "$TOTAL_FAILED_RUNS" -ne 0 ]; then
-  echo "RESULT: FAIL ($TOTAL_FAILED_RUNS of 4 runs failed)"
+  echo "RESULT: FAIL ($TOTAL_FAILED_RUNS of 5 runs failed)"
   exit 1
 fi
-echo "RESULT: PASS (all 4 runs)"
+echo "RESULT: PASS (all 5 runs)"
 exit 0
