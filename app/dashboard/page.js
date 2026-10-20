@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { HELP_URL } from '@/lib/help';
@@ -95,6 +96,52 @@ function classmateName(post) {
   return post.profiles?.full_name || 'Classmate';
 }
 
+// "A", "A and B", "A, B and C".
+function listNames(names) {
+  if (names.length <= 1) return names.join('');
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
+function GroupTiles({ groups }) {
+  return (
+    <section className={styles.card} aria-labelledby="your-groups-title">
+      <div className={styles.postHead}>
+        <div>
+          <div className="eyebrow">Your groups</div>
+          <h2 id="your-groups-title" className={styles.cardTitle}>
+            Where you post
+          </h2>
+        </div>
+        <Link className="link" href="/join">
+          Join another group
+        </Link>
+      </div>
+      <ul role="list" className={styles.groupTiles}>
+        {groups.map((g) => (
+          <li key={g.group_id} className={styles.tile}>
+            <h3 className={styles.tileName}>{g.group_name}</h3>
+            <p className={styles.tileClass}>{g.classroom_name}</p>
+            <dl className={styles.tileStats}>
+              <div>
+                <dt>members</dt>
+                <dd>{g.member_count}</dd>
+              </div>
+              <div>
+                <dt>posts</dt>
+                <dd>{g.post_count}</dd>
+              </div>
+              <div>
+                <dt>engagements</dt>
+                <dd>{g.engagement_count}</dd>
+              </div>
+            </dl>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function ProgressRing({ engaged, total }) {
   const circumference = 2 * Math.PI * 42;
   const fraction = total ? engaged / total : 0;
@@ -141,7 +188,7 @@ function PostItem({ post }) {
         <a className="btn btn-ghost" href={post.url} target="_blank" rel="noopener noreferrer">
           Open post
         </a>
-        <EngageButton postId={post.id} engaged={false} />
+        <EngageButton postId={post.id} />
       </div>
     </li>
   );
@@ -171,8 +218,17 @@ export default async function DashboardPage() {
   const { data: today, error: todayError } = await supabase.rpc('app_today');
   if (todayError) throw new Error('Database not set up. Run supabase/schema.sql first.');
 
-  const [profile, myPost, feed, myEngagements, postCount, givenCount, receivedCount] =
-    await Promise.all([
+  const [
+    profile,
+    myPost,
+    feed,
+    myEngagements,
+    postCount,
+    givenCount,
+    receivedCount,
+    adminCheck,
+    groupTotals,
+  ] = await Promise.all([
       supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle(),
       supabase
         .from('posts')
@@ -196,7 +252,16 @@ export default async function DashboardPage() {
         .from('engagements')
         .select('id, posts!inner(user_id)', { count: 'exact', head: true })
         .eq('posts.user_id', user.id),
+      supabase.rpc('is_admin'),
+      // For a member: their own groups only. Counts, never names or rankings.
+      supabase.rpc('group_totals'),
     ]);
+
+  if (adminCheck.error || groupTotals.error) {
+    throw new Error('Database not up to date. Apply the migrations in supabase/migrations first.');
+  }
+  // The admin account has its own screen and never joins a group.
+  if (adminCheck.data === true) redirect('/admin');
 
   const fullName = profile.data?.full_name || user.email;
   const firstName = profile.data?.full_name?.trim().split(/\s+/)[0] || 'there';
@@ -204,6 +269,8 @@ export default async function DashboardPage() {
   const engagedIds = new Set((myEngagements.data || []).map((e) => e.post_id));
   const waiting = posts.filter((p) => !engagedIds.has(p.id));
   const done = posts.filter((p) => engagedIds.has(p.id));
+  const groups = groupTotals.data || [];
+  const inGroup = groups.length > 0;
   const isNewUser = (postCount.count ?? 0) === 0 && (givenCount.count ?? 0) === 0;
   const todayLabel = longDateFormat.format(new Date(`${today}T00:00:00Z`));
   const greeting = greetingFor(new Date());
@@ -245,17 +312,37 @@ export default async function DashboardPage() {
                 {greeting}, {firstName}
               </h1>
               <p className={styles.sub}>
-                {posts.length > 0
-                  ? `You've engaged with ${done.length} of ${posts.length} classmates' posts.`
-                  : "No classmates' posts yet."}
+                {!inGroup
+                  ? 'You are not in a group yet.'
+                  : posts.length > 0
+                    ? `You've engaged with ${done.length} of ${posts.length} classmates' posts.`
+                    : "No classmates' posts yet."}
               </p>
             </div>
-            <ProgressRing engaged={done.length} total={posts.length} />
+            {inGroup && <ProgressRing engaged={done.length} total={posts.length} />}
           </div>
         </div>
       </header>
 
       <main className={styles.main}>
+        {!inGroup ? (
+          <section className={`${styles.card} ${styles.noGroup}`} aria-labelledby="no-group-title">
+            <div className="eyebrow">One step left</div>
+            <h2 id="no-group-title" className={styles.cardTitle}>
+              Join your group to start
+            </h2>
+            <p className={`small ${styles.noGroupText}`}>
+              You see posts and can post only after you join a group. Ask your group chat for the
+              invite link or code.
+            </p>
+            <Link className="btn" href="/join">
+              Enter an invite code
+            </Link>
+          </section>
+        ) : (
+          <>
+        <GroupTiles groups={groups} />
+
         {isNewUser && (
           <section className={styles.card} aria-labelledby="how-it-works-title">
             <h2 id="how-it-works-title" className={styles.cardTitle}>
@@ -321,6 +408,9 @@ export default async function DashboardPage() {
           ) : (
             <SubmitPostForm />
           )}
+          <p className={`small ${styles.seenBy}`}>
+            Your post is seen by everyone in {listNames(groups.map((g) => g.group_name))}.
+          </p>
         </section>
 
         {posts.length === 0 ? (
@@ -377,6 +467,8 @@ export default async function DashboardPage() {
                 </ul>
               </details>
             )}
+          </>
+        )}
           </>
         )}
       </main>

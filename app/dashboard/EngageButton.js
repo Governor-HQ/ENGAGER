@@ -5,25 +5,9 @@ import { markEngaged } from './actions';
 import useSubmitOnce from './useSubmitOnce';
 import styles from './dashboard.module.css';
 
-export default function EngageButton({ postId, engaged }) {
+export default function EngageButton({ postId }) {
   const [state, formAction, pending] = useActionState(markEngaged, null);
   const onSubmit = useSubmitOnce(pending);
-
-  const error = state?.error && <p className="err" role="alert">{state.error}</p>;
-
-  if (engaged) {
-    return (
-      <div className={styles.engage}>
-        <span className={styles.engagedState}>
-          <span className={styles.engagedTick} aria-hidden="true">
-            ✓
-          </span>
-          Engaged
-        </span>
-        {error}
-      </div>
-    );
-  }
 
   return (
     <form action={formAction} onSubmit={onSubmit} className={styles.engage}>
@@ -32,7 +16,7 @@ export default function EngageButton({ postId, engaged }) {
         {pending && <span className="spinner" aria-hidden="true" />}
         {pending ? 'Saving…' : 'Mark as engaged'}
       </button>
-      {error}
+      {state?.error && <p className="err" role="alert">{state.error}</p>}
     </form>
   );
 }
