@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { safeNext } from '@/lib/safe-next';
 
 const GENERIC_ERROR = 'Something went wrong, try again.';
 
@@ -62,7 +63,7 @@ export async function signup(_prevState, formData) {
     };
   }
 
-  redirect('/dashboard');
+  redirect(safeNext(formData.get('next')) ?? '/dashboard');
 }
 
 export async function login(_prevState, formData) {
@@ -74,7 +75,7 @@ export async function login(_prevState, formData) {
 
   if (error) return { error: loginErrorMessage(error) };
 
-  redirect('/dashboard');
+  redirect(safeNext(formData.get('next')) ?? '/dashboard');
 }
 
 export async function logout() {

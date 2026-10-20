@@ -6,8 +6,9 @@ import { HELP_URL } from '@/lib/help';
 import { login, signup } from './auth-actions';
 import styles from './AuthForm.module.css';
 
-export default function AuthForm({ mode }) {
+export default function AuthForm({ mode, next = null }) {
   const isSignup = mode === 'signup';
+  const nextQuery = next ? `?next=${encodeURIComponent(next)}` : '';
   const [state, formAction, pending] = useActionState(isSignup ? signup : login, null);
 
   return (
@@ -26,6 +27,8 @@ export default function AuthForm({ mode }) {
 
       <form action={formAction} className={styles.form}>
         <h2 className={styles.title}>{isSignup ? 'Create your account' : 'Log in to your account'}</h2>
+
+        {next && <input type="hidden" name="next" value={next} />}
 
         {isSignup && (
           <label className="field">
@@ -56,9 +59,9 @@ export default function AuthForm({ mode }) {
 
         <p className="small">
           {isSignup ? (
-            <>Already have an account? <Link className="link" href="/login">Log in</Link></>
+            <>Already have an account? <Link className="link" href={`/login${nextQuery}`}>Log in</Link></>
           ) : (
-            <>New here? <Link className="link" href="/signup">Create an account</Link></>
+            <>New here? <Link className="link" href={`/signup${nextQuery}`}>Create an account</Link></>
           )}
         </p>
         <p className="small">

@@ -1,0 +1,17 @@
+/* Extras for the join form: a bold, letter-spaced code input and a calm notice. */
+
+.code {
+  font-weight: 700 !important;
+  font-size: 18px !important;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.info {
+  margin: 0;
+  color: var(--good);
+  background: var(--good-bg);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  font-size: 14px;
+}

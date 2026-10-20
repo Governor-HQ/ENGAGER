@@ -42,6 +42,10 @@ export async function proxy(request) {
 
   let redirectTo = null;
   if (!user && !isAuthPage) redirectTo = '/login';
+  // Invite links: send signed-out visitors to sign up and bring them back after.
+  if (!user && (pathname === '/join' || pathname.startsWith('/join/'))) {
+    redirectTo = `/signup?next=${encodeURIComponent(pathname)}`;
+  }
   if (user && (isAuthPage || pathname === '/')) redirectTo = '/dashboard';
 
   if (redirectTo) {
