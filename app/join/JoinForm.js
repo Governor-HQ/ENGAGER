@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { HELP_URL } from '@/lib/help';
 import useSubmitOnce from '../dashboard/useSubmitOnce';
 import authStyles from '../AuthForm.module.css';
@@ -11,6 +11,8 @@ import { joinGroup } from './actions';
 export default function JoinForm({ initialCode = '' }) {
   const [state, formAction, pending] = useActionState(joinGroup, null);
   const onSubmit = useSubmitOnce(pending);
+  // Controlled so a wrong code stays in the box (React 19 resets uncontrolled forms after an action).
+  const [code, setCode] = useState(initialCode);
 
   return (
     <main className={authStyles.login}>
@@ -36,7 +38,8 @@ export default function JoinForm({ initialCode = '' }) {
             className={styles.code}
             name="code"
             type="text"
-            defaultValue={initialCode}
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
             maxLength={40}
             autoComplete="off"
             autoCapitalize="characters"
