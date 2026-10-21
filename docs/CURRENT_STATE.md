@@ -1,8 +1,8 @@
-# ENGAGER current state (20 Oct 2026)
+# ENGAGER current state (21 Oct 2026)
 
 ## Git
 - Branch main, last commit f2fdbf2 "Hide X-Powered-By header, restyle Already engaged state, fix dashboard dead space", pushed to Governor-HQ/ENGAGER. This is what is live at engager.vercel.app.
-- Not yet committed (untracked on Governor's machine until he commits the handoff): supabase/migrations/, supabase/rollbacks/, supabase/db-tests/, docs/.
+- Stage 2 work is on branch stage2-groups (see the Stage 2 section below).
 
 ## Verified on 20 Oct 2026 (by the build lead, not by the cloud session)
 - `bash supabase/db-tests/run.sh` on throwaway PostgreSQL 16.15: engager_test 164 passed 0 failed; engager_rollback 17 passed 0 failed; engager_propagation 21 passed 0 failed; RESULT PASS (all 3 runs). Port 54329 free afterwards.
@@ -24,3 +24,12 @@
 
 ## Next
 Cloud session builds B1 to B7 on branch stage2-groups (see docs/HANDOFF.md section 11).
+
+## Stage 2 built on branch stage2-groups (21 Oct 2026, cloud session)
+Built and pushed to `stage2-groups` (never main): join page `/join` and `/join/<code>` (invite link survives sign up and log in, small approved edit in proxy.js), admin screens `/admin` (groups, codes, members, locked accounts, confirm bars for rotate, move, remove, unlock), group aware dashboard (group tiles, who sees your post, no-group card, admin sent to `/admin`), a second migration `20261020120000_admin_views.sql` with rollback, schema.sql header fixed, tests, and `docs/RELEASE.md` (order to go live, the gap answer, rollback).
+
+Verified in the cloud session: `npm ci`; `npm run build`; `npm test` (5 helper tests); `bash supabase/db-tests/run.sh` on PostgreSQL 16.15, 6 runs, 164 + 17 + 21 + 28 + 16 + 4 = 250 checks pass; mutation checks on the new migration (3 broken copies caught); signed in screens loaded and screenshotted against a throwaway fake of the Supabase API (not in the repo).
+
+Not verified: real Supabase and real sign in; PostgreSQL 17; the CLI applying the migrations; Vercel Preview variables; a real phone; dark mode of join and admin. Everything doubtful is in `docs/REVIEW_NOTES.md`.
+
+Next: Governor reviews the branch and follows `docs/RELEASE.md`. Both migrations are still NOT applied anywhere.

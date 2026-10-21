@@ -2,6 +2,16 @@
 
 Decided by Governor unless stated. Newest first.
 
+## 21 Oct 2026: Stage 2 screen choices (picked by Governor from image mockups)
+- Join page: split layout like login (red panel plus form).
+- Admin: one page with a table per classroom, members and locked accounts, with a visible confirm bar for rotate, move, remove and unlock.
+- Dashboard: a "Your groups" card with one tile per group (members, posts, engagements) and a line saying who sees your post. Totals only, no per group filter.
+- No group: a "Join your group to start" card with an Enter an invite code button.
+- proxy.js: small edit approved so a signed out visitor on /join goes to /signup?next=/join/<code> and comes back after.
+- Admin member names: a second migration (`20261020120000_admin_views.sql`) adds admin only functions for member names and locked accounts. The tested first migration is untouched. This widens the admin rule: the admin now sees member names and join dates (not emails, not posts).
+- schema.sql stays the base file with a header pointing to the migrations (merging the group tables in would break the tests and the migration's run-twice guard).
+- Commit author stays as the container identity; commit messages carry no AI trailer.
+
 ## 20 Oct 2026: how the cloud session works
 - Git: the cloud session commits small pieces and pushes the branch stage2-groups. Never main. Governor merges.
 - Order: join page and admin screens first (in parallel), then the dashboard.
@@ -30,4 +40,4 @@ Decided by Governor unless stated. Newest first.
 - Redesign (tokens, fonts, dark mode) and CSP with nonce shipped before that.
 
 ## Status
-Stage 1 (database) finished and tested, not applied. Stage 2 (screens) not started. See docs/CURRENT_STATE.md.
+Stage 1 (database) finished and tested, not applied. Stage 2 (screens) built on branch stage2-groups, not merged. See docs/CURRENT_STATE.md and docs/RELEASE.md.
