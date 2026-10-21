@@ -1,6 +1,15 @@
 -- =====================================================================
--- Engager — Supabase schema
+-- Engager: Supabase schema (base tables)
 -- Run this whole file once in: Supabase Dashboard → SQL Editor → New query
+--
+-- This file is the BASE only: profiles, posts, engagements and app_today().
+-- Classrooms, groups, invite codes, admin accounts and the new access rules
+-- come from the migrations, applied in order AFTER this file:
+--   supabase/migrations/20261009120000_classrooms_groups.sql
+--   supabase/migrations/20261020120000_admin_views.sql
+-- The first migration replaces the read and insert policies defined below, and
+-- refuses to run if the groups tables already exist, so do not copy the group
+-- tables into this file. The database tests load this file first, then the migrations.
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
