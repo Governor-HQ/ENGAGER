@@ -13,6 +13,7 @@
 # Run 3 (db engager_propagation): stub.sql, ../schema.sql, <migration>, propagation.test.sql
 # Run 4 (db engager_admin_views): stub.sql, ../schema.sql, <migration>, <admin views migration>, admin_views.test.sql
 # Run 5 (db engager_release_gap): stub.sql, ../schema.sql, seed_legacy.sql, <migration>, release_gap.test.sql
+# Run 6 (db engager_admin_rollback): stub.sql, ../schema.sql, <migration>, <admin views migration>, <admin views rollback>, admin_rollback.test.sql
 # Exit code is non-zero if any test failed or any SQL errored.
 
 set -u
@@ -23,6 +24,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SUPA_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 MIGRATION="${1:-$SUPA_DIR/migrations/20261009120000_classrooms_groups.sql}"
 ROLLBACK="$SUPA_DIR/rollbacks/20261009120000_classrooms_groups_rollback.sql"
+ADMIN_VIEWS_ROLLBACK="$SUPA_DIR/rollbacks/20261020120000_admin_views_rollback.sql"
 ADMIN_VIEWS="${2:-$SUPA_DIR/migrations/20261020120000_admin_views.sql}"
 
 die() { echo "FATAL: $*" >&2; exit 2; }
@@ -152,10 +154,14 @@ run_suite engager_release_gap "$SCRIPT_DIR/release_gap.test.sql" \
   "$SCRIPT_DIR/stub.sql" "$SUPA_DIR/schema.sql" "$SCRIPT_DIR/seed_legacy.sql" "$MIGRATION" \
   || TOTAL_FAILED_RUNS=$((TOTAL_FAILED_RUNS + 1))
 
+run_suite engager_admin_rollback "$SCRIPT_DIR/admin_rollback.test.sql" \
+  "$SCRIPT_DIR/stub.sql" "$SUPA_DIR/schema.sql" "$MIGRATION" "$ADMIN_VIEWS" "$ADMIN_VIEWS_ROLLBACK" \
+  || TOTAL_FAILED_RUNS=$((TOTAL_FAILED_RUNS + 1))
+
 echo
 if [ "$TOTAL_FAILED_RUNS" -ne 0 ]; then
-  echo "RESULT: FAIL ($TOTAL_FAILED_RUNS of 5 runs failed)"
+  echo "RESULT: FAIL ($TOTAL_FAILED_RUNS of 6 runs failed)"
   exit 1
 fi
-echo "RESULT: PASS (all 5 runs)"
+echo "RESULT: PASS (all 6 runs)"
 exit 0
